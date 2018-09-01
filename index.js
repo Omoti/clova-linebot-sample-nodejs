@@ -1,10 +1,9 @@
 const clova = require('@line/clova-cek-sdk-nodejs');
 const express = require('express');
-const bodyParser = require('body-parser');
 const line = require('@line/bot-sdk');
 
 const client = new line.Client({
-  channelAccessToken: '<Your Access Token>'
+  channelAccessToken: "YOUR_ACCESS_TOKEN" //Messaging APIのアクセストークン
 });
 
 const clovaSkillHandler = clova.Client
@@ -13,26 +12,28 @@ const clovaSkillHandler = clova.Client
     responseHelper.setSimpleSpeech({
       lang: 'ja',
       type: 'PlainText',
-      value: '買い物メモです。何を買いますか？',
+      value: 'リマインダーです。何を買いますか？',
     });
   })
   .onIntentRequest(async responseHelper => {
     const intent = responseHelper.getIntentName();
-    const userId = responseHelper.requestObject.session.user.userId;
-    const target = responseHelper.getSlot("Target");
-
+    const userId = responseHelper.getUser().userId;
+    
     switch (intent) {
       case 'ReminderIntent':
+        const target = responseHelper.getSlot("target");
+        
         //LINEプッシュ通知
         client.pushMessage(userId, {
           type: 'text',
           text: target + '買う'
         });
 
+        //音声のレスポンス
         responseHelper.setSimpleSpeech({
           lang: 'ja',
           type: 'PlainText',
-          value: target + 'ですね。' + 'わかりました',
+          value: target + '、ですね。' + 'わかりました',
         });
 
         responseHelper.endSession();
@@ -45,7 +46,7 @@ const clovaSkillHandler = clova.Client
   .handle();
 
 const app = new express();
-const clovaMiddleware = clova.Middleware({ applicationId: "<Your Application Id>" });
+const clovaMiddleware = clova.Middleware({ applicationId: "YOUR_APPLICATION_ID" }); //Extension ID	
 // Use `clovaMiddleware` if you want to verify signature and applicationId.
 // Please note `applicationId` is required when using this middleware.
 app.post('/clova', clovaMiddleware, clovaSkillHandler);
